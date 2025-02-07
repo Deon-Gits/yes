@@ -1,0 +1,71 @@
+def is_armstrong(number: int) -> bool:
+    digits = [int(digit) for digit in str(number)]
+    num_digits = len(digits)
+    armstrong_sum = sum([digit ** num_digits for digit in digits])
+    return armstrong_sum == number
+
+def is_odd(number: int) -> bool:
+    return number % 2 != 0
+
+def is_even(number: int) -> bool:
+    return number % 2 == 0
+
+import requests
+
+def get_fun_fact(number: int) -> str:
+    url = f"http://numbersapi.com/{number}/math"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text
+    return "No fun fact available."
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import requests
+
+app = FastAPI()
+
+# Helper functions here: is_armstrong, is_odd, is_even, get_fun_fact
+
+@app.get("/api/classify-number")
+async def classify_number(number: int):
+    # Validate if the number is a valid integer
+    if not isinstance(number, int):
+        raise HTTPException(status_code=400, detail="Invalid number")
+
+    # Classify the number
+    properties = []
+    if is_armstrong(number):
+        properties.append("armstrong")
+    if is_odd(number):
+        properties.append("odd")
+    elif is_even(number):
+        properties.append("even")
+
+    # Get fun fact
+    fun_fact = get_fun_fact(number)
+
+    # Build the response
+    response = {
+        "number": number,
+        "is_prime": False,  # Placeholder, you can implement prime check if needed
+        "is_perfect": False,  # Placeholder for perfect number check if needed
+        "properties": properties,
+        "digit_sum": sum([int(digit) for digit in str(number)]),  # Sum of digits
+        "fun_fact": fun_fact
+    }
+    return response
+
+from fastapi.middleware.cors import CORSMiddleware
+
+# Add CORS middleware to the app
+origins = ["*"]  # Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
+
+
